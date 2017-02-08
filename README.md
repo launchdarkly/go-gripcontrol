@@ -33,7 +33,7 @@ Examples for how to publish HTTP response and HTTP stream messages to GRIP proxy
 ```go
 package main
 
-import "github.com/fanout/go-pubcontrol"
+import "github.com/launchdarkly/go-pubcontrol"
 import "github.com/fanout/go-gripcontrol"
 import "encoding/base64"
 
@@ -164,7 +164,7 @@ package main
 import "time"
 import "net/http"
 import "github.com/gorilla/websocket"
-import "github.com/fanout/go-pubcontrol"
+import "github.com/launchdarkly/go-pubcontrol"
 import "github.com/fanout/go-gripcontrol"
 
 var upgrader = websocket.Upgrader{
@@ -214,7 +214,7 @@ WebSocket over HTTP example. In this case, a client connects to a GRIP proxy via
 package main
 
 import "github.com/fanout/go-gripcontrol"
-import "github.com/fanout/go-pubcontrol"
+import "github.com/launchdarkly/go-pubcontrol"
 import "io/ioutil"
 import "net/http"
 import "time"

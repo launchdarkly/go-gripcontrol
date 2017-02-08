@@ -8,7 +8,7 @@
 package gripcontrol
 
 import ("testing"
-        "github.com/fanout/go-pubcontrol"
+        "github.com/launchdarkly/go-pubcontrol"
         "github.com/stretchr/testify/assert")
 
 // TODO: Use reflection to ensure that clients are configured properly.

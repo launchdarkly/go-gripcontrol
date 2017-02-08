@@ -7,7 +7,7 @@
 
 package gripcontrol
 
-import "github.com/fanout/go-pubcontrol"
+import "github.com/launchdarkly/go-pubcontrol"
 
 // The GripPubControl struct allows consumers to easily publish HTTP response
 // and HTTP stream format messages to GRIP proxies. Configuring GripPubControl

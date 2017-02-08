@@ -7,34 +7,45 @@
 
 package pubcontrol
 
+import (
+	"sync"
+	"strings"
+	"fmt"
+)
+
 // The PubControl struct allows a consumer to manage a set of publishing
 // endpoints and to publish to all of those endpoints via a single publish
 // method call. A PubControl instance can be configured either using a
 // hash or array of hashes containing configuration information or by
 // manually adding PubControlClient instances.
 type PubControl struct {
-    clients []*PubControlClient
+	clients       []*PubControlClient
+	clientsRWLock sync.RWMutex
 }
 
 // Initialize with or without a configuration. A configuration can be applied
 // after initialization via the apply_config method.
 func NewPubControl(config []map[string]interface{}) *PubControl {
-    pc := new(PubControl)
-    pc.clients = make([]*PubControlClient, 0)
-    if config != nil && len(config) > 0 {
-        pc.ApplyConfig(config)
-    }
-    return pc
+	pc := new(PubControl)
+	pc.clients = make([]*PubControlClient, 0)
+	if config != nil && len(config) > 0 {
+		pc.ApplyConfig(config)
+	}
+	return pc
 }
 
 // Remove all of the configured PubControlClient instances.
 func (pc *PubControl) RemoveAllClients() {
-    pc.clients = make([]*PubControlClient, 0)
+	pc.clientsRWLock.Lock()
+	defer pc.clientsRWLock.Unlock()
+	pc.clients = make([]*PubControlClient, 0)
 }
 
 // Add the specified PubControlClient instance.
 func (pc *PubControl) AddClient(pcc *PubControlClient) {
-    pc.clients = append(pc.clients, pcc)
+	pc.clientsRWLock.Lock()
+	defer pc.clientsRWLock.Unlock()
+	pc.clients = append(pc.clients, pcc)
 }
 
 // Apply the specified configuration to this PubControl instance. The
@@ -43,33 +54,42 @@ func (pc *PubControl) AddClient(pcc *PubControlClient) {
 // will be parsed and a PubControlClient will be created either using just
 // a URI or a URI and JWT authentication information.
 func (pc *PubControl) ApplyConfig(config []map[string]interface{}) {
-    for _, entry := range config {
-        if _, ok := entry["uri"]; !ok {
-            continue
-        }
-        pcc := NewPubControlClient(entry["uri"].(string))
-        if _, ok := entry["iss"]; ok {
-            claim := make(map[string]interface{})
-            claim["iss"] = entry["iss"]
-            switch entry["key"].(type) {
-                case string:
-                    pcc.SetAuthJwt(claim, []byte(entry["key"].(string)))
-                case []byte:
-                    pcc.SetAuthJwt(claim, entry["key"].([]byte))
-            }
-        }
-        pc.clients = append(pc.clients, pcc)
-    }
+	pc.clientsRWLock.Lock()
+	defer pc.clientsRWLock.Unlock()
+	for _, entry := range config {
+		if _, ok := entry["uri"]; !ok {
+			continue
+		}
+		pcc := NewPubControlClient(entry["uri"].(string))
+		if _, ok := entry["iss"]; ok {
+			claim := make(map[string]interface{})
+			claim["iss"] = entry["iss"]
+			switch entry["key"].(type) {
+			case string:
+				pcc.SetAuthJwt(claim, []byte(entry["key"].(string)))
+			case []byte:
+				pcc.SetAuthJwt(claim, entry["key"].([]byte))
+			}
+		}
+		pc.clients = append(pc.clients, pcc)
+	}
 }
 
 // The publish method for publishing the specified item to the specified
 // channel on the configured endpoints.
 func (pc *PubControl) Publish(channel string, item *Item) error {
-    for _, pcc := range pc.clients {
-        err := pcc.Publish(channel, item)
-        if err != nil {
-            return err
-        }
-    }
-    return nil
+	pc.clientsRWLock.RLock()
+	defer pc.clientsRWLock.RUnlock()
+	errs := make([]string, 0)
+	for _, pcc := range pc.clients {
+		err := pcc.Publish(channel, item)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("%d/%d client(s) failed to publish to channel: %s Errors: [%s]",
+			len(errs), len(pc.clients), channel, strings.Join(errs, "],["))
+	}
+	return nil
 }
