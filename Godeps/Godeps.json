@@ -1,16 +1,25 @@
 {
-	"ImportPath": "github.com/fanout/go-gripcontrol",
-	"GoVersion": "go1.4",
+	"ImportPath": "github.com/launchdarkly/go-gripcontrol",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v75",
 	"Deps": [
 		{
-			"ImportPath": "github.com/dgrijalva/jwt-go",
-			"Comment": "v2.2.0-15-g61124b6",
-			"Rev": "61124b62ad244d655f87d944aefaa2ae5a0d2f16"
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
-			"ImportPath": "github.com/fanout/go-pubcontrol",
-			"Comment": "1.0.2",
-			"Rev": "37d5e09163ceb5ff833f2101687a259fca223c81"
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v3.0.0-17-g2268707",
+			"Rev": "2268707a8f0843315e2004ee4f1d021dc08baedf"
+		},
+		{
+			"ImportPath": "github.com/launchdarkly/go-pubcontrol",
+			"Comment": "1.0.2-15-g868eb34",
+			"Rev": "868eb340cf15e746b679bfc3246841a857d520f7"
+		},
+		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
