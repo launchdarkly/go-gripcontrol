@@ -1,7 +1,7 @@
 machine:
   environment:
     GODIST: "go1.6.3.linux-amd64.tar.gz"
-    IMPORT_PATH: "github.com/launchdarkly/event-recorder"
+    IMPORT_PATH: "github.com/launchdarkly/go-pubcontrol"
   post:
     - mkdir -p download
     - test -e download/$GODIST || curl -o download/$GODIST https://storage.googleapis.com/golang/$GODIST
