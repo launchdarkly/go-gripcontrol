@@ -14,14 +14,14 @@ Installation
 ------------
 
 ```sh
-go get github.com/fanout/go-gripcontrol
+go get github.com/launchdarkly/go-gripcontrol
 ```
 
 go-gripcontrol requires jwt-go 2.2.0 and go-pubcontrol 1.0.1. To ensure that the correct version of both of these dependencies are installed use godeps:
 
 ```sh
 go get github.com/tools/godep
-cd $GOPATH/src/github.com/fanout/go-gripcontrol
+cd $GOPATH/src/github.com/launchdarkly/go-gripcontrol
 $GOPATH/bin/godep restore
 ```
 
@@ -34,7 +34,7 @@ Examples for how to publish HTTP response and HTTP stream messages to GRIP proxy
 package main
 
 import "github.com/launchdarkly/go-pubcontrol"
-import "github.com/fanout/go-gripcontrol"
+import "github.com/launchdarkly/go-gripcontrol"
 import "encoding/base64"
 
 func main() {
@@ -90,7 +90,7 @@ Long polling example via response _headers_. The client connects to a GRIP proxy
 ```go
 package main
 
-import "github.com/fanout/go-gripcontrol"
+import "github.com/launchdarkly/go-gripcontrol"
 import "net/http"
 
 func HandleRequest(writer http.ResponseWriter, request *http.Request) {
@@ -122,7 +122,7 @@ Long polling example via response _body_. The client connects to a GRIP proxy ov
 ```go
 package main
 
-import "github.com/fanout/go-gripcontrol"
+import "github.com/launchdarkly/go-gripcontrol"
 import "net/http"
 import "io"
 
@@ -165,7 +165,7 @@ import "time"
 import "net/http"
 import "github.com/gorilla/websocket"
 import "github.com/launchdarkly/go-pubcontrol"
-import "github.com/fanout/go-gripcontrol"
+import "github.com/launchdarkly/go-gripcontrol"
 
 var upgrader = websocket.Upgrader{
     ReadBufferSize:  1024,
@@ -213,7 +213,7 @@ WebSocket over HTTP example. In this case, a client connects to a GRIP proxy via
 ```go
 package main
 
-import "github.com/fanout/go-gripcontrol"
+import "github.com/launchdarkly/go-gripcontrol"
 import "github.com/launchdarkly/go-pubcontrol"
 import "io/ioutil"
 import "net/http"
