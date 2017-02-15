@@ -35,11 +35,28 @@ func NewGripPubControl(config []map[string]interface{}) *GripPubControl {
 // will be parsed and a PubControlClient will be created either using just
 // a URI or a URI and JWT authentication information.
 func (gpc *GripPubControl) ApplyGripConfig(config []map[string]interface{}) {
+    gpc.ApplyGripConfigWithSubscriptionWatcher(config, nil)
+}
+
+// Apply the specified GRIP configuration to this GripPubControl instance.
+// The configuration object can either be a hash or an array of hashes where
+// each hash corresponds to a single PubControlClient instance. Each hash
+// will be parsed and a PubControlClient will be created either using just
+// a URI or a URI and JWT authentication information.
+
+// The Subscription Watcher will be passed along to each client and shared among them.
+func (gpc *GripPubControl) ApplyGripConfigWithSubscriptionWatcher(config []map[string]interface{}, watcher pubcontrol.SubscriptionWatcher) {
     for _, entry := range config {
         if _, ok := entry["control_uri"]; !ok {
             continue
         }
-        pcc := pubcontrol.NewPubControlClient(entry["control_uri"].(string))
+        uri := entry["control_uri"].(string)
+        var pcc *pubcontrol.PubControlClient
+        if watcher != nil {
+            pcc = pubcontrol.NewPubControlClientWithSubscriptionWatcher(uri, watcher)
+        } else {
+            pcc = pubcontrol.NewPubControlClient(uri)
+        }
         if _, ok := entry["control_iss"]; ok {
             claim := make(map[string]interface{})
             claim["iss"] = entry["control_iss"]

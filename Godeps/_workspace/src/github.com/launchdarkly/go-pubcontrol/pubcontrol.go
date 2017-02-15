@@ -81,6 +81,20 @@ func (pc *PubControl) ApplyConfig(config []map[string]interface{}) {
 // with this function waiting for them to finish. Any errors (including panics) are aggregated
 // into one error.
 func (pc *PubControl) Publish(channel string, item *Item) error {
+	return pc.publish(channel, item, false)
+}
+
+// The publish method for publishing the specified item to the specified
+// channel on the configured endpoints. Different endpoints are published to in parallel,
+// with this function waiting for them to finish. Any errors (including panics) are aggregated
+// into one error.
+// When checkSubscriptions is true,
+// the message is only sent if the endpoint has active subscription(s) on the item's channel
+func (pc *PubControl) MaybePublish(channel string, item *Item, checkSubscriptions bool) error {
+	return pc.publish(channel, item, checkSubscriptions)
+}
+
+func (pc *PubControl) publish(channel string, item *Item, checkSubscriptions bool) error {
 	pc.clientsRWLock.RLock()
 	defer pc.clientsRWLock.RUnlock()
 	wg := sync.WaitGroup{}
@@ -99,7 +113,7 @@ func (pc *PubControl) Publish(channel string, item *Item) error {
 				wg.Done()
 			}()
 
-			err := client.Publish(channel, item)
+			err := client.MaybePublish(channel, item, checkSubscriptions)
 			if err != nil {
 				errCh <- fmt.Sprintf("%s: %s", client.uri, strings.TrimSpace(err.Error()))
 			}
