@@ -14,8 +14,8 @@
 		},
 		{
 			"ImportPath": "github.com/launchdarkly/go-pubcontrol",
-			"Comment": "1.0.2-22-g681d8ef",
-			"Rev": "681d8efaaac7c668c765c0688beb135a809f53a1"
+			"Comment": "1.0.2-23-g29ac42e",
+			"Rev": "29ac42e440def10363cd1f1bcafe5184dc5c632f"
 		},
 		{
 			"ImportPath": "github.com/pmezard/go-difflib/difflib",
