@@ -38,21 +38,30 @@ type makeHttpRequester func(pcc *PubControlClient, uri, authHeader string,
 // an optional callback parameter that is called after the publishing is
 // complete to notify the consumer of the result.
 type PubControlClient struct {
-	uri             string
-	isWorkerRunning bool
-	lock            *sync.Mutex
-	authBasicUser   string
-	authBasicPass   string
-	authJwtClaim    map[string]interface{}
-	authJwtKey      []byte
-	publish         publisher
-	pubCall         pubCaller
-	makeHttpRequest makeHttpRequester
-	httpClient      *http.Client
+	uri                 string
+	isWorkerRunning     bool
+	lock                *sync.Mutex
+	authBasicUser       string
+	authBasicPass       string
+	authJwtClaim        map[string]interface{}
+	authJwtKey          []byte
+	publish             publisher
+	pubCall             pubCaller
+	makeHttpRequest     makeHttpRequester
+	httpClient          *http.Client
+	SubscriptionWatcher SubscriptionWatcher
+}
+// Initialize this struct with a URL representing the publishing endpoint and a SubscriptionWatcer
+func NewPubControlClientWithSubscriptionWatcher(uri string, subscriptionWatcher SubscriptionWatcher) *PubControlClient {
+	return newPubControlClient(uri, subscriptionWatcher)
 }
 
 // Initialize this struct with a URL representing the publishing endpoint.
 func NewPubControlClient(uri string) *PubControlClient {
+	return newPubControlClient(uri, defaultSubscriptionWatcher)
+}
+
+func newPubControlClient(uri string, subscriptionWatcher SubscriptionWatcher) *PubControlClient {
 	// This is basically the same as the default in Go 1.6, but with these changes:
 	// Timeout: 30s -> 10s
 	// TLSHandshakeTimeout: 10s -> 7s
@@ -75,6 +84,7 @@ func NewPubControlClient(uri string) *PubControlClient {
 	newPcc.publish = publish
 	newPcc.makeHttpRequest = makeHttpRequest
 	newPcc.httpClient = &http.Client{Transport: transport, Timeout: 15 * time.Second}
+	newPcc.SubscriptionWatcher = subscriptionWatcher
 	return newPcc
 }
 
@@ -125,6 +135,18 @@ func (pcc *PubControlClient) generateAuthHeader() (string, error) {
 	} else {
 		return "", nil
 	}
+}
+
+// The publish method for publishing the specified item to the specified
+// channel on the configured endpoint. When checkSubscriptions is true,
+// the message is only sent if the channel has active subscription(s)
+func (pcc *PubControlClient) MaybePublish(channel string, item *Item, checkSubscriptions bool) error {
+	if checkSubscriptions &&
+		pcc.SubscriptionWatcher.IsHealthy() &&
+		!pcc.SubscriptionWatcher.IsChannelConnected(channel) {
+		return nil
+	}
+	return pcc.publish(pcc, channel, item)
 }
 
 // The publish method for publishing the specified item to the specified

@@ -35,11 +35,28 @@ func NewGripPubControl(config []map[string]interface{}) *GripPubControl {
 // will be parsed and a PubControlClient will be created either using just
 // a URI or a URI and JWT authentication information.
 func (gpc *GripPubControl) ApplyGripConfig(config []map[string]interface{}) {
+    gpc.ApplyGripConfigWithSubscriptionWatcher(config, nil)
+}
+
+// Apply the specified GRIP configuration to this GripPubControl instance.
+// The configuration object can either be a hash or an array of hashes where
+// each hash corresponds to a single PubControlClient instance. Each hash
+// will be parsed and a PubControlClient will be created either using just
+// a URI or a URI and JWT authentication information.
+
+// The Subscription Watcher will be passed along to each client and shared among them.
+func (gpc *GripPubControl) ApplyGripConfigWithSubscriptionWatcher(config []map[string]interface{}, watcher pubcontrol.SubscriptionWatcher) {
     for _, entry := range config {
         if _, ok := entry["control_uri"]; !ok {
             continue
         }
-        pcc := pubcontrol.NewPubControlClient(entry["control_uri"].(string))
+        uri := entry["control_uri"].(string)
+        var pcc *pubcontrol.PubControlClient
+        if watcher != nil {
+            pcc = pubcontrol.NewPubControlClientWithSubscriptionWatcher(uri, watcher)
+        } else {
+            pcc = pubcontrol.NewPubControlClient(uri)
+        }
         if _, ok := entry["control_iss"]; ok {
             claim := make(map[string]interface{})
             claim["iss"] = entry["control_iss"]
@@ -76,12 +93,31 @@ func (gpc *GripPubControl) PublishHttpResponse(channel string,
 // array (in which case an HttpStreamFormat instance will automatically
 // be created and have the 'content' field set to the specified value).
 func (gpc *GripPubControl) PublishHttpStream(channel string,
-        http_stream interface{}, id, prevId string) error {
-    item, err := getHttpStreamItem(http_stream, id, prevId)
-    if err != nil {
-        return err
-    }
-    return gpc.Publish(channel, item)
+	http_stream interface{}, id, prevId string) error {
+	return gpc.publishHttpStream(channel, http_stream, id, prevId, false)
+}
+
+func (gpc *GripPubControl) publishHttpStream(channel string,
+	http_stream interface{}, id, prevId string, checkSubscriptions bool) error {
+	item, err := getHttpStreamItem(http_stream, id, prevId)
+	if err != nil {
+		return err
+	}
+	return gpc.MaybePublish(channel, item, checkSubscriptions)
+}
+
+// Publish an HTTP stream format message to all of the configured
+// PubControlClients with a specified channel, message, and optional ID,
+// previous ID, and callback. Note that the 'http_stream' parameter can
+// be provided as either an HttpStreamFormat instance or a string / byte
+// array (in which case an HttpStreamFormat instance will automatically
+// be created and have the 'content' field set to the specified value).
+
+// When checkSubscriptions is true, messages will only be sent to endpoints with active
+// subscribers on the given channel
+func (gpc *GripPubControl) PublishHttpStreamMaybe(channel string,
+	http_stream interface{}, id, prevId string, checkSubscriptions bool) error {
+	return gpc.publishHttpStream(channel, http_stream, id, prevId, checkSubscriptions)
 }
 
 // An internal method for returning an Item instance used for HTTP response
