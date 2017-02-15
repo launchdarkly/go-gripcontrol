@@ -93,12 +93,31 @@ func (gpc *GripPubControl) PublishHttpResponse(channel string,
 // array (in which case an HttpStreamFormat instance will automatically
 // be created and have the 'content' field set to the specified value).
 func (gpc *GripPubControl) PublishHttpStream(channel string,
-        http_stream interface{}, id, prevId string) error {
-    item, err := getHttpStreamItem(http_stream, id, prevId)
-    if err != nil {
-        return err
-    }
-    return gpc.Publish(channel, item)
+	http_stream interface{}, id, prevId string) error {
+	return gpc.publishHttpStream(channel, http_stream, id, prevId, false)
+}
+
+func (gpc *GripPubControl) publishHttpStream(channel string,
+	http_stream interface{}, id, prevId string, checkSubscriptions bool) error {
+	item, err := getHttpStreamItem(http_stream, id, prevId)
+	if err != nil {
+		return err
+	}
+	return gpc.MaybePublish(channel, item, checkSubscriptions)
+}
+
+// Publish an HTTP stream format message to all of the configured
+// PubControlClients with a specified channel, message, and optional ID,
+// previous ID, and callback. Note that the 'http_stream' parameter can
+// be provided as either an HttpStreamFormat instance or a string / byte
+// array (in which case an HttpStreamFormat instance will automatically
+// be created and have the 'content' field set to the specified value).
+
+// When checkSubscriptions is true, messages will only be sent to endpoints with active
+// subscribers on the given channel
+func (gpc *GripPubControl) PublishHttpStreamMaybe(channel string,
+	http_stream interface{}, id, prevId string, checkSubscriptions bool) error {
+	return gpc.publishHttpStream(channel, http_stream, id, prevId, checkSubscriptions)
 }
 
 // An internal method for returning an Item instance used for HTTP response
